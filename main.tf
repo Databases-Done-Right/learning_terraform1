@@ -22,3 +22,27 @@ resource "aws_instance" "web" {
     Name = "HelloWorld"
   }
 }
+
+resource "aws_ses_email_identity" "example" {
+  email = "bjameson@webddr.com"
+}
+
+action "aws_ses_send_email" "example" {
+  config {
+    source       = aws_ses_email_identity.example.email
+    subject      = "Test Email"
+    text_body    = "This is a test email sent from Terraform once the apply completes."
+    to_addresses = ["brettwjameson@churchofjesuschrist.org"]
+  }
+}
+
+resource "terraform_data" "example" {
+  input = "send-notification"
+
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_ses_send_email.example]
+    }
+  }
+}
